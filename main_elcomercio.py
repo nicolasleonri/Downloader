@@ -1,4 +1,5 @@
 import time
+import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -111,16 +112,16 @@ errors = []
 # url = "https://www.pressreader.com/peru/diario-trome/"
 url = "https://www.pressreader.com/peru/diario-el-comercio/"
 
-for year in range(2020, 2021, 1):
+for year in range(2014, 2015, 1):
 
-    for month in range(3, 13, 1):
+    for month in range(1, 13, 1):
 
         for day in range(1, 32, 1):
 
             page_number_checked = False
             df_links = pd.DataFrame()
 
-            for page in range(1, 51, 1):
+            for page in range(1, 101, 2):
 
                 extension = str(
                     str(year)+str(f"{int(month):02d}")+str(f"{int(day):02d}")+"/page/"+str(page))
@@ -149,7 +150,7 @@ for year in range(2020, 2021, 1):
                 try:
                     driver.find_element(
                         By.XPATH, "//div[@class='layout zoom']").click()
-                    time.sleep(3)
+                    time.sleep(5)
                 except Exception as e:
                     print(f'error while opening url - {e}')
                     errors.append(str(url_todownload))
@@ -167,7 +168,7 @@ for year in range(2020, 2021, 1):
                 link_list = []
 
                 for idx, val in enumerate(img_list):
-                    if ".co/" in val and "top" not in val and "nd_id" not in val and "scale=38" not in val and "scale" in val and "width" not in val:
+                    if ".co/" in val and "ticket" in val:
                         link_list.append(val)
 
                 df = pd.DataFrame()
@@ -178,17 +179,19 @@ for year in range(2020, 2021, 1):
                     df = pd.concat([df, df_toadd], axis=0,
                                    join="outer", copy=True)
 
-                print(df)
-
                 if len(df) == 0:
                     continue
 
-                if len(df.columns) == 4 or len(df) == 1:
+                df = df.drop(df.columns[[3, 4, 5, 6]], axis=1)
+
+                df.columns = range(df.columns.size)
+
+                if len(df) == 1:
                     pass
                 else:
                     try:
                         df.drop_duplicates(
-                            subset=df.iloc[:, [4]], keep="last", inplace=True)
+                            subset=df.iloc[:, [3]], keep="last", inplace=True)
                     except Exception as e:
                         print(f'error while droping - {e}')
                         errors.append(str(url_todownload))
@@ -200,19 +203,19 @@ for year in range(2020, 2021, 1):
                 df_links = pd.concat(
                     [df_links, df], axis=0, join="outer", copy=True)
 
-                print(df_links)
+                print(len(df_links))
 
             try:
                 df_links.drop_duplicates(
-                    subset=df_links.iloc[:, [4]], keep="last", inplace=True)
+                    subset=df_links.iloc[:, [3]], keep="last", inplace=True)
             except Exception as e:
                 print(f'error while droping duplicates - {e}')
                 continue
 
             df_links = df_links.rename(columns={df_links.columns[0]: "http", df_links.columns[1]: "page-number",
-                                       df_links.columns[2]: "scale", df_links.columns[3]: "layer", df_links.columns[4]: "token", })
+                                       df_links.columns[2]: "scale", df_links.columns[3]: "token", })
 
-            df_links["scale"] = 'scale=172'
+            df_links["scale"] = 'scale=179'
             df_links["layer"] = 'layer=fg'
             df_links = df_links.fillna('')
 
@@ -229,3 +232,6 @@ for year in range(2020, 2021, 1):
             write_to_txt_results(final_list)
 
             print("Length final_list:", len(final_list))
+
+# with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+# print(df_links)

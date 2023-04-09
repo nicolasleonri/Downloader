@@ -110,9 +110,9 @@ errors = []
 url = "https://www.pressreader.com/peru/diario-trome/"
 
 
-for year in range(2020, 2021, 1):
+for year in range(2022, 2023, 1):
 
-    for month in range(1, 4, 1):
+    for month in range(1, 13, 1):
 
         for day in range(1, 32, 1):
 
